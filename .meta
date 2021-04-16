@@ -1,5 +1,6 @@
 {
   "projects": {
-    "IMS": "https://github.com/connellrobert/IssueManagementSystemAPI.git"
+    "IMS": "https://github.com/connellrobert/IssueManagementSystemAPI.git",
+    "department": "https://github.com/connellrobert/Department-API.git"
   }
 }
