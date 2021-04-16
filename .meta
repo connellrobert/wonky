@@ -1,3 +1,5 @@
 {
-  "projects": {}
+  "projects": {
+    "IMS": "https://github.com/connellrobert/IssueManagementSystemAPI.git"
+  }
 }
