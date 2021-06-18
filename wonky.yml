@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: complaint
+  tier: api
+spec:
+  selector:
+    app: complaint
+    tier: api
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+
+apiVersion: v1
+kind: Deployment
+spec:
+  selector:
+    matchLabels:
+      app: complaint
+      tier: api
+  replicas: 1
+  template:
+    metadata:
+      name: complaint
+      labels:
+        name: complaint
+    spec:
+      containers:
+      - name: complaint
+        image: complaint-api
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 3000
+            hostPort: 80
+      - name: mongo
+        image: complaint-mongo
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        env:
+        - name: MONGODB_IP
+          value: mongo:27017
+        ports:
+          - containerPort: 27017
+            hostPort: 27017
+      hostname: complaint
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: department
+spec:
+  selector:
+    app: department
+    tier: api
+  ports:
+  - port: 80
+    targetPort: 3000
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: department
+spec:
+  selector:
+    matchLabels:
+      app: department
+      tier: api
+  template:
+    metadata:
+      labels:
+        app: department
+    spec:
+      containers:
+      - name: department
+        image: department-api
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3000
+        env:
+        - name: MYSQL_HOST
+          value: mysql:3307
+      - name: department-db
+        image: dep-mysql
+        resources: 
+          limit:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3307
+      hostname: department
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: issue
+spec:
+  selector:
+    app: issue
+  ports:
+  - port: 9009
+    targetPort: 8080
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: issue
+spec:
+  selector:
+    matchLabels:
+      app: issue
+  template:
+    metadata:
+      labels:
+        app: issue
+        tier: api
+    spec:
+      containers:
+      - name: issue
+        image: ims-api
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 9009
+          hostPort: 8080
+
+
+
