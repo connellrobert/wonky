@@ -2,27 +2,25 @@ apiVersion: v1
 kind: Service
 metadata:
   name: complaint
-  tier: api
 spec:
   selector:
-    app: complaint
-    tier: api
+    name: complaint
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: 3000
   type: ClusterIP
-
-apiVersion: v1
+---
+apiVersion: apps/v1
 kind: Deployment
+metadata:
+  name: complaint
 spec:
   selector:
     matchLabels:
-      app: complaint
-      tier: api
+      name: complaint
   replicas: 1
   template:
     metadata:
-      name: complaint
       labels:
         name: complaint
     spec:
@@ -33,35 +31,34 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
-        ports:
-          - containerPort: 3000
-            hostPort: 80
-      - name: mongo
-        image: complaint-mongo
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
         env:
         - name: MONGODB_IP
-          value: mongo:27017
+          value: localhost:27017
+        - name: PORT
+          value: "3000"
+        ports:
+          - containerPort: 3000
+      - name: mongo
+        image: mongo
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         ports:
           - containerPort: 27017
-            hostPort: 27017
       hostname: complaint
-
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: department
 spec:
   selector:
-    app: department
-    tier: api
+    name: department
   ports:
   - port: 80
     targetPort: 3000
-
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -69,12 +66,12 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: department
-      tier: api
+      name: department
+  replicas: 1
   template:
     metadata:
       labels:
-        app: department
+        name: department
     spec:
       containers:
       - name: department
@@ -83,32 +80,41 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
+        env:
+        - name: DATASOURCE_PORT
+          value: "3306"
+        - name: DATASOURCE_HOST
+          value: localhost
+        - name: DATASOURCE_USERNAME
+          value: root
+        - name: DATASOURCE_PASSWORD
+          value: password
+        - name: DATASOURCE_DATABASE
+          value: test
+        - name: PORT
+          value: "3000"
         ports:
         - containerPort: 3000
-        env:
-        - name: MYSQL_HOST
-          value: mysql:3307
       - name: department-db
         image: dep-mysql
         resources: 
-          limit:
-            memory: "128Mi"
+          limits:
+            memory: "1Gi"
             cpu: "500m"
         ports:
-        - containerPort: 3307
-      hostname: department
-
+        - containerPort: 3306
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: issue
 spec:
   selector:
-    app: issue
+    name: issue
   ports:
   - port: 9009
-    targetPort: 8080
-
+    targetPort: 9009
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -116,12 +122,12 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: issue
+      name: issue
+  replicas: 1
   template:
     metadata:
       labels:
-        app: issue
-        tier: api
+        name: issue
     spec:
       containers:
       - name: issue
@@ -130,80 +136,95 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "500m"
+        env:
+        - name: DATASOURCE_URL
+          value: "jdbc:postgresql://localhost:5432/postgres"
+        - name: DATASOURCE_USERNAME
+          value: postgres
+        - name: DATASOURCE_PASSWORD
+          value: password
+        - name: SERVER_PORT
+          value: "9009"
         ports:
         - containerPort: 9009
-          hostPort: 8080
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: app-fe
-  tier: client
-spec:
-  selector:
-    app: wonky
-    tier: client
-  ports:
-  - port: 80
-    targetPort: 80
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: app-fe
-spec:
-  selector:
-    matchLabels:
-      app: wonky
-      tier: client
-  template:
-    metadata:
-      labels:
-        app: wonky-fe
-    spec:
-      containers:
-      - name: wonky-fe
-        image: wonky-fe
+      - name: imsdb
+        image: postgres
         resources:
           limits:
-            memory: "128Mi"
+            memory: "1Gi"
             cpu: "500m"
-        ports:
-        - containerPort: 80
+        env:
+        - name: POSTGRES_PASSWORD
+          value: password
+---
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: command-central
-spec:
-  selector:
-    app: command-central
-  ports:
-  - port: 80
-    targetPort: 8080
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: app-fe
+# spec:
+#   selector:
+#     app: wonky
+#   ports:
+#   - port: 80
+#     targetPort: 80
 
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: command-central
-spec:
-  selector:
-    matchLabels:
-      app: command-central
-  template:
-    metadata:
-      labels:
-        app: command-central
-    spec:
-      containers:
-      - name: command-central
-        image: command-central
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-        ports:
-        - containerPort: 8080
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: app-fe
+# spec:
+#   selector:
+#     matchLabels:
+#       name: wonky
+#   template:
+#     metadata:
+#       labels:
+#         name: wonky-fe
+#     spec:
+#       containers:
+#       - name: wonky-fe
+#         image: wonky-fe
+#         resources:
+#           limits:
+#             memory: "128Mi"
+#             cpu: "500m"
+#         ports:
+#         - containerPort: 80
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: command-central
+# spec:
+#   selector:
+#     name: command-central
+#   ports:
+#   - port: 80
+#     targetPort: 8080
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: command-central
+# spec:
+#   selector:
+#     matchLabels:
+#       name: command-central
+#   template:
+#     metadata:
+#       labels:
+#         name: command-central
+#     spec:
+#       containers:
+#       - name: command-central
+#         image: command-central
+#         resources:
+#           limits:
+#             memory: "128Mi"
+#             cpu: "500m"
+#         ports:
+#         - containerPort: 8080
 
 
 

@@ -1,9 +1,9 @@
 {
   "projects": {
     "IMS": "https://github.com/connellrobert/IssueManagementSystemAPI.git",
-    "department": "https://github.com/connellrobert/Department-API.git",
     "complaint": "https://github.com/connellrobert/Complaint-API.git",
+    "department": "https://github.com/connellrobert/Department-API.git",
     "wonky-fe": "https://github.com/connellrobert/wonky-fe.git",
-    "command-central": "https://github.com/connellrobert/command-central.git
+    "command-central": "https://github.com/connellrobert/command-central.git"
   }
 }
